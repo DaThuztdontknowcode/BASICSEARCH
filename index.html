@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+
+    <style>
+      body {
+          background-color: #f8f9fa;
+      }
+      .app-container {
+          max-width: 600px; 
+          margin: 2rem auto; 
+          padding: 1.5rem;
+          background-color: #ffffff; 
+          box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.1), 0 6px 20px 0 rgba(0, 0, 0, 0.1); 
+          border-radius: 10px; 
+      }
+      h1 {
+          text-align: center;
+          margin-bottom: 1rem;
+          color: #343a40; 
+      }
+      .search-input {
+          margin-bottom: 1rem; 
+      }
+      .results-list {
+          list-style-type: none;
+          padding: 0;
+      }
+      .results-list li {
+          border-bottom: 1px solid #dee2e6;
+          padding: 1rem 0; 
+      }
+      .results-list li:last-child {
+          border-bottom: none; 
+      }
+    </style>
+    <title>Tra cứu địa chỉ khu phố</title>
+</head>
+<body>
+    <div id="app" class="app-container">
+        <h1>Tra cứu địa chỉ khu phố</h1>
+        <form @submit.prevent="getData">
+            <input type="search" class="form-control" v-model="query" placeholder="Nhập địa chỉ..." />
+            <button type="submit" class="btn btn-primary" style="margin: 1rem auto; display: block;">Tìm kiếm</button>
+        </form>
+        
+        <div v-if="error" class="alert alert-danger">{{ error }}</div>
+        
+        <div v-else>
+            <h2>Kết quả tìm kiếm:</h2>
+            <ul class="results-list">
+                <li v-for="result in results" :key="result['Địa chỉ']">
+                    <p>Địa chỉ: {{ result["Địa chỉ"] || 'Không rõ địa chỉ' }}</p>
+                    <p>Đường: {{ result["Đường"] || 'Không rõ đường' }}</p>
+                    <p>Khu phố: {{ result["Khu phố"]|| result[""] || 'Không rõ khu phố' }}</p>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/vue@3.2.30/dist/vue.global.min.js"></script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    
+    <script>const app = Vue.createApp({
+        data() {
+          return {
+            query: '', 
+            results: [],
+            error: null, 
+            allData: [], 
+            isLoading: false, 
+          };
+        },
+        methods: {
+          async fetchAllData() { 
+            const endpoint = `https://10db74a9838f4744acb88f20045c6c0a.api.mockbin.io/addresses`;
+      
+            try {
+              const response = await axios.get(endpoint);
+              this.allData = response.data;
+            } catch (error) {
+              this.error = 'Lỗi khi truy xuất dữ liệu từ API';
+              console.error('Lỗi API:', error);
+            }
+          },
+      
+        
+search() {
+    this.error = null; 
+    this.results = []; 
+
+    const trimmedQuery = this.query.trim();
+
+    if (trimmedQuery === '') { 
+        this.error = 'Hãy nhập từ khóa tìm kiếm';
+        return;
+    }
+
+    const cleanData = this.allData.map((item) => ({
+        "Địa chỉ": item["Địa chỉ"] || '' || item["địa chỉ"],
+        "Đường": item["Đường"] || '',
+        "Khu phố": item["Khu phố"] || '',
+    }));
+
+    this.results = cleanData.filter((item) =>
+        item["Địa chỉ"].toLowerCase().includes(trimmedQuery.toLowerCase())
+    );
+
+    if (this.results.length === 0) {
+        this.error = 'Không tìm thấy kết quả phù hợp';
+    }
+}
+,
+      
+          async getData() {
+            this.isLoading = true;
+      
+            if (this.allData.length === 0) {
+              await this.fetchAllData();
+            }
+      
+            this.search(); 
+            this.isLoading = false;
+          },
+        },
+      });
+      
+      app.mount('#app'); 
+      
+    </script>
+</body>
+</html>
